@@ -1,13 +1,11 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include <mkl_cblas.h>
 
-float dp(long N, float *pA, float *pB) {
-    float R = 0.0;
-    int j;
-    for (j=0;j<N;j++)
-      R += pA[j]*pB[j];
-    return R;
+float bdp(long N, float *pA, float *pB) {
+    float R = cblas_sdot(N, pA, 1, pB, 1);
+    return R; 
 }
 
 int main(int argc, char *argv[]) {
@@ -40,7 +38,7 @@ int main(int argc, char *argv[]) {
     // Perform the measurements
     for (int i = 0; i < iter; i++) {
         clock_gettime(CLOCK_MONOTONIC, &start);
-        float ans = dp(N, pA, pB);
+        float ans = bdp(N, pA, pB);
         clock_gettime(CLOCK_MONOTONIC, &end);
 
         // Print result to ensure computation is performed
