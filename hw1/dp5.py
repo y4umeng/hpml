@@ -34,10 +34,10 @@ def main():
         if i >= repetitions // 2:  # Only average the second half
             total_time += time_taken
 
-    # Compute average time for the second half
+    # Compute average time for the second half (Arithmetic Mean)
     average_time = total_time / (repetitions // 2)
     
-    # Compute bandwidth and FLOP
+    # Compute bandwidth and FLOP (Harmonic Mean)
     bandwidth = (2.0 * N * 4) / average_time / (1024 ** 3)  # GB/sec (4 bytes for float32)
     flops = (2.0 * N) / average_time  # FLOP/sec
 

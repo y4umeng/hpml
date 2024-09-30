@@ -54,10 +54,10 @@ int main(int argc, char *argv[]) {
         // printf("Iteration %d: %f seconds\n", i + 1, time_taken);
     }
 
-    // Compute average time for the second half
+    // Compute average time for the second half (Arithmetic Mean)
     double average_time = total_time / (iter / 2);
     
-    // Compute bandwidth and FLOP
+    // Compute bandwidth and FLOP (Harmonic Mean)
     double bandwidth = (2.0 * N * sizeof(float) / average_time) / (1024 * 1024 * 1024); // GB/sec
     double flops = (2.0 * N / average_time); // FLOP/sec
 
