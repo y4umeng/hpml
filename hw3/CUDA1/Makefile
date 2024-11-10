@@ -11,7 +11,7 @@ SDK_INSTALL_PATH :=  /usr/local/cuda
 NVCC=$(SDK_INSTALL_PATH)/bin/nvcc
 LIB       :=  -L$(SDK_INSTALL_PATH)/lib64 -L$(SDK_INSTALL_PATH)/samples/common/lib/linux/x86_64
 #INCLUDES  :=  -I$(SDK_INSTALL_PATH)/include -I$(SDK_INSTALL_PATH)/samples/common/inc
-OPTIONS   :=  -O3 -shared -Xcompiler -fPIC
+OPTIONS   :=  -O3
 #--maxrregcount=100 --ptxas-options -v 
 
 TAR_FILE_NAME  := yw3809CUDA1.tar
@@ -28,14 +28,14 @@ tar:
 #######################################################################
 
 timer.o : timer.cu timer.h
-	${NVCC} $< -c -o $@ $(OPTIONS)
+	${NVCC} $< -c -fPIC -o $@ $(OPTIONS)
 
 #######################################################################
 vecaddKernel00.o : vecaddKernel00.cu
-	${NVCC} $< -c -o $@ $(OPTIONS)
+	${NVCC} $< -c -fPIC -o $@ $(OPTIONS)
 
 vecadd00 : vecadd.cu vecaddKernel.h vecaddKernel00.o timer.o
-	${NVCC} $< vecaddKernel00.o -o $@ $(LIB) timer.o $(OPTIONS)
+	${NVCC} $< -c -fPIC vecaddKernel00.o -o $@ $(LIB) timer.o $(OPTIONS)
 
 
 #######################################################################
