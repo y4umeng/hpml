@@ -32,7 +32,7 @@ timer.o : timer.cu timer.h
 
 #######################################################################
 vecaddKernel00.o : vecaddKernel00.cu
-	${NVCC} $< -c -o $@ $(OPTIONS)
+	${NVCC} $< -c -Xcompiler -fPIC -o $@ $(OPTIONS)
 
 vecadd00 : vecadd.cu vecaddKernel.h vecaddKernel00.o timer.o
 	${NVCC} $< vecaddKernel00.o -o $@ $(LIB) timer.o $(OPTIONS)
