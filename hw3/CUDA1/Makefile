@@ -1,22 +1,12 @@
-###
-### For COMS E6998 Spring 2024
-### Instructor: Kaoutar El Maghraoui
-### Makefile for CUDA1 assignment
-### By Wim Bohm, Waruna Ranasinghe, and Louis Rabiet
-### Created: 2011-01-27 DVN
-### Last Modified: Nov 2014 WB, WR, LR
-###
-
 SDK_INSTALL_PATH :=  /usr/local/cuda
 NVCC=$(SDK_INSTALL_PATH)/bin/nvcc
 LIB       :=  -L$(SDK_INSTALL_PATH)/lib64 -L$(SDK_INSTALL_PATH)/samples/common/lib/linux/x86_64
-#INCLUDES  :=  -I$(SDK_INSTALL_PATH)/include -I$(SDK_INSTALL_PATH)/samples/common/inc
-OPTIONS   :=  -O3
-#--maxrregcount=100 --ptxas-options -v 
+OPTIONS   :=  -O3 -Xcompiler -fPIC  # Use -fPIC for compiling object files
+LINK_OPTIONS := -Xlinker -pie       # Use -pie when linking the final executable
 
 TAR_FILE_NAME  := yw3809CUDA1.tar
 EXECS :=  vecadd00 matmult00
-all:$(EXECS)
+all: $(EXECS)
 
 #######################################################################
 clean:
@@ -28,41 +18,18 @@ tar:
 #######################################################################
 
 timer.o : timer.cu timer.h
-	${NVCC} $< -c -o $@ $(OPTIONS) 
+	${NVCC} $< -c -o $@ $(OPTIONS)
 
 #######################################################################
 vecaddKernel00.o : vecaddKernel00.cu
 	${NVCC} $< -c -o $@ $(OPTIONS)
 
 vecadd00 : vecadd.cu vecaddKernel.h vecaddKernel00.o timer.o
-	${NVCC} $< vecaddKernel00.o -o $@ $(LIB) timer.o $(OPTIONS)
-
-
-#######################################################################
-### vecaddKernel01.o : vecaddKernel01.cu
-###	${NVCC} $< -c -o $@ $(OPTIONS)
-###
-### vecadd01 : vecadd.cu vecaddKernel.h vecaddKernel01.o timer.o
-###	${NVCC} $< vecaddKernel01.o -o $@ $(LIB) timer.o $(OPTIONS)
-
+	${NVCC} $< vecaddKernel00.o -o $@ $(LIB) timer.o $(OPTIONS) $(LINK_OPTIONS)
 
 #######################################################################
-## Provided Kernel
 matmultKernel00.o : matmultKernel00.cu matmultKernel.h 
 	${NVCC} $< -c -o $@ $(OPTIONS)
 
 matmult00 : matmult.cu  matmultKernel.h matmultKernel00.o timer.o
-	${NVCC} $< matmultKernel00.o -o $@ $(LIB) timer.o $(OPTIONS)
-
-
-#######################################################################
-## Expanded Kernel, notice that FOOTPRINT_SIZE is redefined (from 16 to 32)
-### matmultKernel01.o : matmultKernel01.cu matmultKernel.h
-###	${NVCC} $< -c -o $@ $(OPTIONS) -DFOOTPRINT_SIZE=32
-###
-### matmult01 : matmult.cu  matmultKernel.h matmultKernel01.o timer.o
-###	${NVCC} $< matmultKernel01.o -o $@ $(LIB) timer.o $(OPTIONS) -DFOOTPRINT_SIZE=32
-
-
-
-
+	${NVCC} $< matmultKernel00.o -o $@ $(LIB) timer.o $(OPTIONS) $(LINK_OPTIONS)
