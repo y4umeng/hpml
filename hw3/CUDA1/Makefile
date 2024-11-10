@@ -28,14 +28,14 @@ tar:
 #######################################################################
 
 timer.o : timer.cu timer.h
-	${NVCC} $< -c -fPIC -o $@ $(OPTIONS)
+	${NVCC} $< -c -Xcompiler -fPIC -o $@ $(OPTIONS)
 
 #######################################################################
 vecaddKernel00.o : vecaddKernel00.cu
-	${NVCC} $< -c -fPIC -o $@ $(OPTIONS)
+	${NVCC} $< -c -Xcompiler -fPIC -o $@ $(OPTIONS)
 
 vecadd00 : vecadd.cu vecaddKernel.h vecaddKernel00.o timer.o
-	${NVCC} $< -c -fPIC vecaddKernel00.o -o $@ $(LIB) timer.o $(OPTIONS)
+	${NVCC} $< -c -Xcompiler -fPIC vecaddKernel00.o -o $@ $(LIB) timer.o $(OPTIONS)
 
 
 #######################################################################
