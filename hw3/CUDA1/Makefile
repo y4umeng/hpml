@@ -1,8 +1,8 @@
 SDK_INSTALL_PATH :=  /usr/local/cuda
 NVCC=$(SDK_INSTALL_PATH)/bin/nvcc
 LIB       :=  -L$(SDK_INSTALL_PATH)/lib64 -L$(SDK_INSTALL_PATH)/samples/common/lib/linux/x86_64
-OPTIONS   :=  -O3 -Xcompiler -fPIC  # Use -fPIC for compiling object files
-LINK_OPTIONS := -Xlinker -pie       # Use -pie when linking the final executable
+OPTIONS   :=  -O3 -Xcompiler -fPIE  # Use -fPIE for object files
+LINK_OPTIONS := -Xlinker -pie       # Use -pie for the final linking
 
 TAR_FILE_NAME  := yw3809CUDA1.tar
 EXECS :=  vecadd00 matmult00
