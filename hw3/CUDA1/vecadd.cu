@@ -135,11 +135,13 @@ int main(int argc, char** argv)
 
     // Verify & report result
     for (i = 0; i < N; ++i) {
+        printf("HELLO");
         float val = h_C[i];
         if (fabs(val - N) > 1e-5)
             printf("fabs failure: %d %f %d", i, val, N);
             break;
     }
+
     printf("I and N: %d %d", i, N);
     printf("Test %s \n", (i == N) ? "PASSED" : "FAILED");
 
