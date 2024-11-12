@@ -13,6 +13,8 @@ void addVectorsOnGPU(float* h_A, float* h_B, float* h_C, size_t N, int numThread
     float *d_A, *d_B, *d_C;
     size_t size = N * sizeof(float);
 
+    printf("Vector size: %d\n", size);
+
     // Allocate memory on the GPU
     cudaMalloc((void**)&d_A, size);
     cudaMalloc((void**)&d_B, size);
@@ -33,7 +35,7 @@ void addVectorsOnGPU(float* h_A, float* h_B, float* h_C, size_t N, int numThread
     // Calculate and display elapsed time
     std::chrono::duration<double> elapsed = end - start;
     std::cout << "Time with " << numBlocks << " block(s) and " << numThreads << " threads per block: "
-              << elapsed.count() << " seconds" << std::endl;
+              << elapsed.count() << " seconds" << std::endl << std::endl;
 
     // Copy result back to host
     cudaMemcpy(h_C, d_C, size, cudaMemcpyDeviceToHost);
