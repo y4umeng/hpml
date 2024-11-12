@@ -140,6 +140,7 @@ int main(int argc, char** argv)
             printf("fabs failure: %d %f %d", i, val, N);
             break;
     }
+    printf("I and N: %d %d", i, N);
     printf("Test %s \n", (i == N) ? "PASSED" : "FAILED");
 
     // Clean up and exit.
