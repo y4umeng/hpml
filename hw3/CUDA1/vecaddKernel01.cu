@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 __global__ void AddVectors(const float* A, const float* B, float* C, int N)
 {
     int index = blockIdx.x * blockDim.x * N + threadIdx.x;
