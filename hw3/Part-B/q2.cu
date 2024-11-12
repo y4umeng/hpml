@@ -70,4 +70,4 @@ int main(int argc, char* argv[]) {
     }
 
     std::cout << "Running with K = " << K << " million elements (" << N << " total elements) and " 
-             
+}           
