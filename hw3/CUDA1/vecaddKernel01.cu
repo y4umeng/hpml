@@ -1,11 +1,12 @@
-__global__ void AddVectors(const float* A, const float* B, float* C, int N)
+__global__ void AddVectors(const float* A, const float* B, float* C, int chunkSize)
 {
-    int blockStartIndex  = blockIdx.x * blockDim.x * N;
-    int threadStartIndex = blockStartIndex + (threadIdx.x * N);
-    int threadEndIndex   = threadStartIndex + N;
-    int i;
+    // Calculate starting index for the current thread's chunk
+    int threadStartIndex = blockIdx.x * blockDim.x * chunkSize + threadIdx.x * chunkSize;
 
-    for( i=threadStartIndex; i<threadEndIndex; ++i ){
-        C[i] = A[i] + B[i];
+    // Process each element in the chunk assigned to this thread
+    for (int i = 0; i < chunkSize; ++i) {
+        int index = threadStartIndex + i;
+        C[index] = A[index] + B[index];
     }
 }
+
