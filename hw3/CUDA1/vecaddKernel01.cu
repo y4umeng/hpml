@@ -7,7 +7,7 @@ __global__ void AddVectors(const float* A, const float* B, float* C, int N)
     int i;
     int stride = N;
 
-    for( i=threadStartIndex; i<threadEndIndex; i += stride){
+    for( i=blockStartIndex; i<blockEndIndex; i += stride){
         C[i] = A[i] + B[i];
     }
 }
