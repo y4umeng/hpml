@@ -32,8 +32,8 @@ int main(int argc, char* argv[]) {
 
     // Initialize arrays A and B with some values
     for (size_t i = 0; i < N; ++i) {
-        A[i] = 1.0f;  // Example value
-        B[i] = 2.0f;  // Example value
+        A[i] = (float) i; 
+        B[i] = (float) i;
     }
 
     // Measure the time taken to add the arrays
