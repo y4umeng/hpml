@@ -15,7 +15,7 @@ OPTIONS   :=  -O3 --compiler-options "-fPIE"
 #--maxrregcount=100 --ptxas-options -v 
 
 TAR_FILE_NAME  := yw3809CUDA1.tar
-EXECS :=  vecadd00 matmult00 vecadd01
+EXECS := vecadd01
 all:$(EXECS)
 
 #######################################################################
