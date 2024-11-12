@@ -13,8 +13,6 @@ void addVectorsOnGPU(float* h_A, float* h_B, float* h_C, size_t N, int numThread
     float *d_A, *d_B, *d_C;
     size_t size = N * sizeof(float);
 
-    printf("Vector size: %d\n", (int) size);
-
     // Allocate memory on the GPU
     cudaMalloc((void**)&d_A, size);
     cudaMalloc((void**)&d_B, size);
@@ -35,7 +33,7 @@ void addVectorsOnGPU(float* h_A, float* h_B, float* h_C, size_t N, int numThread
     // Calculate and display elapsed time
     std::chrono::duration<double> elapsed = end - start;
     std::cout << "Time with " << numBlocks << " block(s) and " << numThreads << " threads per block: "
-              << elapsed.count() << " seconds" << std::endl << std::endl;
+              << elapsed.count() << " seconds" << std::endl;
 
     // Copy result back to host
     cudaMemcpy(h_C, d_C, size, cudaMemcpyDeviceToHost);
@@ -73,6 +71,8 @@ int main(int argc, char* argv[]) {
         h_B[i] = 2.0f;
     }
 
+    printf("Vector size: %d\n", (int) N);
+
     // Scenario: Use one block with one thread
     addVectorsOnGPU(h_A, h_B, h_C, N, 1, true);
 
@@ -84,6 +84,8 @@ int main(int argc, char* argv[]) {
 
     // Scenario: Use one or multiple blocks based on singleBlock argument
     addVectorsOnGPU(h_A, h_B, h_C, N, 256, false);
+
+    std::cout << std::endl;
 
     // Free host memory
     free(h_A);
