@@ -137,6 +137,7 @@ int main(int argc, char** argv)
     for (i = 0; i < N; ++i) {
         float val = h_C[i];
         if (fabs(val - N) > 1e-5)
+            printf("fabs failure: %d %d %d", i, val, N);
             break;
     }
     printf("Test %s \n", (i == N) ? "PASSED" : "FAILED");
