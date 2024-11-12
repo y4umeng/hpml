@@ -9,7 +9,7 @@ __global__ void addKernel(const float* A, const float* B, float* C, size_t N) {
     }
 }
 
-void addVectorsOnGPU(float* h_A, float* h_B, float* h_C, size_t N, int numThreads) {
+void addVectorsOnGPU(float* h_A, float* h_B, float* h_C, size_t N, int numBlocks, int numThreads) {
     float *d_A, *d_B, *d_C;
     size_t size = N * sizeof(float);
 
@@ -21,9 +21,6 @@ void addVectorsOnGPU(float* h_A, float* h_B, float* h_C, size_t N, int numThread
     // Copy data from host to device
     cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
     cudaMemcpy(d_B, h_B, size, cudaMemcpyHostToDevice);
-
-    // Calculate grid and block dimensions
-    int numBlocks = (N + numThreads - 1) / numThreads;
 
     // Launch the kernel and measure time
     auto start = std::chrono::high_resolution_clock::now();
@@ -46,14 +43,15 @@ void addVectorsOnGPU(float* h_A, float* h_B, float* h_C, size_t N, int numThread
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " <K>" << std::endl;
+    if (argc != 3) {
+        std::cerr << "Usage: " << argv[0] << " <K> <numBlocks>" << std::endl;
         return 1;
     }
 
     int K = std::atoi(argv[1]);
-    if (K <= 0) {
-        std::cerr << "K must be a positive integer." << std::endl;
+    int numBlocks = std::atoi(argv[2]);
+    if (K <= 0 || numBlocks <= 0) {
+        std::cerr << "K and numBlocks must be positive integers." << std::endl;
         return 1;
     }
 
@@ -71,24 +69,5 @@ int main(int argc, char* argv[]) {
         h_B[i] = 2.0f;
     }
 
-    std::cout << "Running with K = " << K << " million elements (" << N << " total elements)\n";
-
-    // Scenario 1: One block with one thread
-    std::cout << "\nScenario 1: One block with 1 thread" << std::endl;
-    addVectorsOnGPU(h_A, h_B, h_C, N, 1);
-
-    // Scenario 2: One block with 256 threads
-    std::cout << "\nScenario 2: One block with 256 threads" << std::endl;
-    addVectorsOnGPU(h_A, h_B, h_C, N, 256);
-
-    // Scenario 3: Multiple blocks with 256 threads per block
-    std::cout << "\nScenario 3: Multiple blocks with 256 threads per block" << std::endl;
-    addVectorsOnGPU(h_A, h_B, h_C, N, 256);
-
-    // Free host memory
-    free(h_A);
-    free(h_B);
-    free(h_C);
-
-    return 0;
-}
+    std::cout << "Running with K = " << K << " million elements (" << N << " total elements) and " 
+             
