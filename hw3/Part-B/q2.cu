@@ -70,4 +70,15 @@ int main(int argc, char* argv[]) {
     }
 
     std::cout << "Running with K = " << K << " million elements (" << N << " total elements) and " 
-}           
+              << numBlocks << " blocks\n";
+
+    // Scenario: User-specified number of blocks and 256 threads per block
+    addVectorsOnGPU(h_A, h_B, h_C, N, numBlocks, 256);
+
+    // Free host memory
+    free(h_A);
+    free(h_B);
+    free(h_C);
+
+    return 0;
+}
