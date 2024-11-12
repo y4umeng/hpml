@@ -69,8 +69,7 @@ int main(int argc, char* argv[]) {
         h_B[i] = 2.0f;
     }
 
-    std::cout << "Running with K = " << K << " million elements (" << N << " total elements) and " 
-              << numBlocks << " blocks\n";
+    std::cout << "Running with K = " << K << " million elements (" << N << " total elements) and " << numBlocks << " blocks\n";
 
     // Scenario: User-specified number of blocks and 256 threads per block
     addVectorsOnGPU(h_A, h_B, h_C, N, numBlocks, 256);
