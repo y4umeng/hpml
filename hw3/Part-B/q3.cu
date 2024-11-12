@@ -54,20 +54,19 @@ int main(int argc, char* argv[]) {
         B[i] = 2.0f;
     }
 
-    std::cout << "Running with K = " << K << " million elements (" << N << " total elements)\n";
+    printf("Vector size: %d\n", (int) N);
 
     // Scenario 1: One block with one thread
-    std::cout << "\nScenario 1: One block with 1 thread\n";
     addVectorsOnGPU(A, B, C, N, 1, true);
 
     // Scenario 2: One block with 256 threads
-    std::cout << "\nScenario 2: One block with 256 threads\n";
     addVectorsOnGPU(A, B, C, N, 256, true);
 
     // Scenario 3: Multiple blocks with 256 threads per block
-    std::cout << "\nScenario 3: Multiple blocks with 256 threads per block\n";
     addVectorsOnGPU(A, B, C, N, 256, false);
 
+    std::cout << std::endl;
+    
     // Free Unified Memory
     cudaFree(A);
     cudaFree(B);
