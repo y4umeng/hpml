@@ -142,7 +142,7 @@ int main(int argc, char** argv)
         }
     }
 
-    printf("I and N: %d %d\n", i, N);
+    // printf("I and N: %d %d\n", i, N);
     printf("Test %s \n", (i == N) ? "PASSED" : "FAILED");
 
     // Clean up and exit.
