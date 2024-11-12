@@ -13,7 +13,7 @@ void addVectorsOnGPU(float* h_A, float* h_B, float* h_C, size_t N, int numThread
     float *d_A, *d_B, *d_C;
     size_t size = N * sizeof(float);
 
-    printf("Vector size: %d\n", size);
+    printf("Vector size: %d\n", (int) size);
 
     // Allocate memory on the GPU
     cudaMalloc((void**)&d_A, size);
