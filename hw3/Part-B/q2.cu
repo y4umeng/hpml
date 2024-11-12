@@ -9,7 +9,7 @@ __global__ void addKernel(const float* A, const float* B, float* C, size_t N) {
     }
 }
 
-void addVectorsOnGPU(float* h_A, float* h_B, float* h_C, size_t N, bool singleBlock) {
+void addVectorsOnGPU(float* h_A, float* h_B, float* h_C, size_t N, int numThreads, bool singleBlock) {
     float *d_A, *d_B, *d_C;
     size_t size = N * sizeof(float);
 
@@ -22,7 +22,6 @@ void addVectorsOnGPU(float* h_A, float* h_B, float* h_C, size_t N, bool singleBl
     cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
     cudaMemcpy(d_B, h_B, size, cudaMemcpyHostToDevice);
 
-    int numThreads = 256;
     int numBlocks = singleBlock ? 1 : (N + numThreads - 1) / numThreads;
 
     // Launch the kernel and measure time
@@ -47,12 +46,11 @@ void addVectorsOnGPU(float* h_A, float* h_B, float* h_C, size_t N, bool singleBl
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " <K> <singleBlock>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <K>" << std::endl;
         return 1;
     }
 
     int K = std::atoi(argv[1]);
-    bool singleBlock = std::atoi(argv[2]) != 0;  // Interpret any non-zero as true
 
     if (K <= 0) {
         std::cerr << "K must be a positive integer." << std::endl;
@@ -73,11 +71,17 @@ int main(int argc, char* argv[]) {
         h_B[i] = 2.0f;
     }
 
-    std::cout << "Running with K = " << K << " million elements (" << N << " total elements) and "
-              << (singleBlock ? "1 block" : "multiple blocks") << "\n";
+    // Scenario: Use one block with one thread
+    addVectorsOnGPU(h_A, h_B, h_C, N, 1, true);
+
+    // Scenario: Use one block with 256 threads
+    addVectorsOnGPU(h_A, h_B, h_C, N, 256, true);
+
+    // std::cout << "Running with K = " << K << " million elements (" << N << " total elements) and "
+    //           << (singleBlock ? "1 block" : "multiple blocks") << "\n";
 
     // Scenario: Use one or multiple blocks based on singleBlock argument
-    addVectorsOnGPU(h_A, h_B, h_C, N, singleBlock);
+    addVectorsOnGPU(h_A, h_B, h_C, N, 256, false);
 
     // Free host memory
     free(h_A);
