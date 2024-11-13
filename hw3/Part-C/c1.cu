@@ -11,19 +11,20 @@
 #define P 1
 
 // Kernel for performing convolution
-__global__ void convolutionKernel(const double* __restrict__ I0, const double* __restrict__ F, double* O) {
+__global__ void convolutionKernel(const float* I0, const float* F, float* O) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
     int k = blockIdx.z * blockDim.z + threadIdx.z;
 
     if (x < W && y < H && k < K) {
-        double sum = 0.0;
+        float sum = 0.0f;
         for (int c = 0; c < C; ++c) {
             for (int i = 0; i < FH; ++i) {
                 for (int j = 0; j < FW; ++j) {
                     int ix = x + i;
                     int iy = y + j;
-                    sum += F[k * C * FH * FW + c * FH * FW + (FW - 1 - i) * FW + (FH - 1 - j)] * I0[c * (W + 2 * P) * (H + 2 * P) + iy * (W + 2 * P) + ix];
+                    sum += F[k * C * FH * FW + c * FH * FW + (FW - 1 - i) * FW + (FH - 1 - j)] 
+                           * I0[c * (W + 2 * P) * (H + 2 * P) + iy * (W + 2 * P) + ix];
                 }
             }
         }
@@ -32,7 +33,7 @@ __global__ void convolutionKernel(const double* __restrict__ I0, const double* _
 }
 
 // Host function to initialize tensors
-void initializeInput(double* I) {
+void initializeInput(float* I) {
     for (int c = 0; c < C; ++c) {
         for (int x = 0; x < H; ++x) {
             for (int y = 0; y < W; ++y) {
@@ -42,7 +43,7 @@ void initializeInput(double* I) {
     }
 }
 
-void initializeFilter(double* F) {
+void initializeFilter(float* F) {
     for (int k = 0; k < K; ++k) {
         for (int c = 0; c < C; ++c) {
             for (int i = 0; i < FH; ++i) {
@@ -54,12 +55,12 @@ void initializeFilter(double* F) {
     }
 }
 
-void addPadding(const double* I, double* I0) {
+void addPadding(const float* I, float* I0) {
     for (int c = 0; c < C; ++c) {
         for (int x = 0; x < H + 2 * P; ++x) {
             for (int y = 0; y < W + 2 * P; ++y) {
                 if (x < P || x >= H + P || y < P || y >= W + P) {
-                    I0[c * (H + 2 * P) * (W + 2 * P) + x * (W + 2 * P) + y] = 0.0;
+                    I0[c * (H + 2 * P) * (W + 2 * P) + x * (W + 2 * P) + y] = 0.0f;
                 } else {
                     I0[c * (H + 2 * P) * (W + 2 * P) + x * (W + 2 * P) + y] = I[c * H * W + (x - P) * W + (y - P)];
                 }
@@ -70,11 +71,11 @@ void addPadding(const double* I, double* I0) {
 
 int main() {
     // Allocate Unified Memory for input, filter, and output tensors
-    double *I, *I0, *F, *O;
-    cudaMallocManaged(&I, C * H * W * sizeof(double));
-    cudaMallocManaged(&I0, C * (H + 2 * P) * (W + 2 * P) * sizeof(double));
-    cudaMallocManaged(&F, K * C * FH * FW * sizeof(double));
-    cudaMallocManaged(&O, K * W * H * sizeof(double));
+    float *I, *I0, *F, *O;
+    cudaMallocManaged(&I, C * H * W * sizeof(float));
+    cudaMallocManaged(&I0, C * (H + 2 * P) * (W + 2 * P) * sizeof(float));
+    cudaMallocManaged(&F, K * C * FH * FW * sizeof(float));
+    cudaMallocManaged(&O, K * W * H * sizeof(float));
 
     // Initialize input tensor I and filter F
     initializeInput(I);
@@ -94,11 +95,11 @@ int main() {
     auto end = std::chrono::high_resolution_clock::now();
 
     // Calculate and display elapsed time
-    std::chrono::duration<double> elapsed = end - start;
+    std::chrono::duration<float> elapsed = end - start;
     std::cout << "Kernel execution time: " << elapsed.count() << " seconds" << std::endl;
 
     // Calculate checksum
-    double checksum = 0.0;
+    float checksum = 0.0f;
     for (int i = 0; i < K * W * H; ++i) {
         checksum += O[i];
     }
