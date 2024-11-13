@@ -90,7 +90,7 @@ int main() {
     // Run the convolution kernel and measure execution time
     auto start = std::chrono::high_resolution_clock::now();
     convolutionKernel<<<gridDim, blockDim>>>(I0, F, O);
-    cudaDeviceSynchronize();  // Ensure all threads are done
+    cudaDeviceSynchronize();
     auto end = std::chrono::high_resolution_clock::now();
 
     // Calculate and display elapsed time
