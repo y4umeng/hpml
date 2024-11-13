@@ -5,33 +5,57 @@
 #define H 1024
 #define W 1024
 #define C 3
+#define K 64
 #define FH 3
 #define FW 3
-#define K 64
 #define P 1
 
-// Kernel for performing convolution
-__global__ void convolutionKernel(const double* __restrict__ I0, const double* __restrict__ F, double* O) {
+__global__ void tiledConvolutionKernel(const double* I0, const double* F, double* O, int width, int height) {
+    extern __shared__ double tile[];
+
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
-    int k = blockIdx.z * blockDim.z + threadIdx.z;
+    int k = blockIdx.z;
 
-    if (x < W && y < H && k < K) {
-        double sum = 0.0;
+    int threadX = threadIdx.x;
+    int threadY = threadIdx.y;
+
+    if (x < width && y < height) {
+        double result = 0.0;
+        
         for (int c = 0; c < C; ++c) {
+            // Load input tile with padding into shared memory
+            int input_x = x - P;
+            int input_y = y - P;
+            if (input_x >= 0 && input_x < width + 2 * P && input_y >= 0 && input_y < height + 2 * P) {
+                tile[threadY * blockDim.x + threadX] = I0[c * (width + 2 * P) * (height + 2 * P) + input_y * (width + 2 * P) + input_x];
+            } else {
+                tile[threadY * blockDim.x + threadX] = 0.0;
+            }
+
+            __syncthreads();
+
+            // Perform convolution
             for (int i = 0; i < FH; ++i) {
                 for (int j = 0; j < FW; ++j) {
-                    int ix = x + i;
-                    int iy = y + j;
-                    sum += F[k * C * FH * FW + c * FH * FW + (FW - 1 - i) * FW + (FH - 1 - j)] * I0[c * (W + 2 * P) * (H + 2 * P) + iy * (W + 2 * P) + ix];
+                    int tx = FW - 1 - i;
+                    int ty = FH - 1 - j;
+                    int ix = threadX + i;
+                    int iy = threadY + j;
+
+                    if (ix < blockDim.x && iy < blockDim.y) {
+                        result += F[(k * C + c) * FH * FW + tx * FW + ty] * tile[iy * blockDim.x + ix];
+                    }
                 }
             }
+
+            __syncthreads();
         }
-        O[k * W * H + y * W + x] = sum;
+        
+        O[k * width * height + y * width + x] = result;
     }
 }
 
-// Host function to initialize tensors
 void initializeInput(double* I) {
     for (int c = 0; c < C; ++c) {
         for (int x = 0; x < H; ++x) {
@@ -69,42 +93,39 @@ void addPadding(const double* I, double* I0) {
 }
 
 int main() {
-    // Allocate Unified Memory for input, filter, and output tensors
-    double *I, *I0, *F, *O;
-    cudaMallocManaged(&I, C * H * W * sizeof(double));
-    cudaMallocManaged(&I0, C * (H + 2 * P) * (W + 2 * P) * sizeof(double));
-    cudaMallocManaged(&F, K * C * FH * FW * sizeof(double));
-    cudaMallocManaged(&O, K * W * H * sizeof(double));
+    size_t imageSize = C * H * W * sizeof(double);
+    size_t paddedSize = C * (H + 2 * P) * (W + 2 * P) * sizeof(double);
+    size_t filterSize = K * C * FH * FW * sizeof(double);
+    size_t outputSize = K * H * W * sizeof(double);
 
-    // Initialize input tensor I and filter F
+    double *I, *I0, *F, *O;
+    cudaMallocManaged(&I, imageSize);
+    cudaMallocManaged(&I0, paddedSize);
+    cudaMallocManaged(&F, filterSize);
+    cudaMallocManaged(&O, outputSize);
+
     initializeInput(I);
     initializeFilter(F);
     addPadding(I, I0);
 
-    // Define the block and grid sizes
-    dim3 blockDim(16, 16, 1);
-    dim3 gridDim((W + blockDim.x - 1) / blockDim.x,
-                 (H + blockDim.y - 1) / blockDim.y,
-                 (K + blockDim.z - 1) / blockDim.z);
+    dim3 blockSize(16, 16);
+    dim3 gridSize((W + blockSize.x - 1) / blockSize.x, (H + blockSize.y - 1) / blockSize.y, K);
+    size_t sharedMemSize = blockSize.x * blockSize.y * sizeof(double);
 
-    // Run the convolution kernel and measure execution time
     auto start = std::chrono::high_resolution_clock::now();
-    convolutionKernel<<<gridDim, blockDim>>>(I0, F, O);
+    tiledConvolutionKernel<<<gridSize, blockSize, sharedMemSize>>>(I0, F, O, W, H);
     cudaDeviceSynchronize();
     auto end = std::chrono::high_resolution_clock::now();
 
-    // Calculate and display elapsed time
     std::chrono::duration<double> elapsed = end - start;
     std::cout << "Kernel execution time: " << elapsed.count() << " seconds" << std::endl;
 
-    // Calculate checksum
     double checksum = 0.0;
     for (int i = 0; i < K * W * H; ++i) {
         checksum += O[i];
     }
     std::cout << "Checksum (sum of all elements in O): " << checksum << std::endl;
 
-    // Free Unified Memory
     cudaFree(I);
     cudaFree(I0);
     cudaFree(F);
