@@ -83,8 +83,8 @@ int main() {
     // Set tensor descriptors
     CHECK_CUDNN(cudnnSetTensor4dDescriptor(
         input_descriptor,
-        CUDNN_TENSOR_NCHW,    // Format
-        CUDNN_DATA_DOUBLE,    // Data type
+        CUDNN_TENSOR_NCHW,
+        CUDNN_DATA_DOUBLE,
         1,                    // Batch size
         C,                    // Channels
         H,                    // Height
@@ -93,8 +93,8 @@ int main() {
 
     CHECK_CUDNN(cudnnSetFilter4dDescriptor(
         filter_descriptor,
-        CUDNN_DATA_DOUBLE,    // Data type
-        CUDNN_TENSOR_NCHW,    // Format
+        CUDNN_DATA_DOUBLE,
+        CUDNN_TENSOR_NCHW,
         K,                    // Number of output feature maps
         C,                    // Number of input feature maps
         FH,                   // Filter height
@@ -107,7 +107,7 @@ int main() {
         1, 1,                 // Vertical and horizontal stride
         1, 1,                 // Vertical and horizontal dilation
         CUDNN_CONVOLUTION,    // Mode
-        CUDNN_DATA_DOUBLE    // Compute type
+        CUDNN_DATA_DOUBLE     // Compute type
     ));
 
     // Get output dimensions
@@ -125,26 +125,32 @@ int main() {
     // Set output descriptor
     CHECK_CUDNN(cudnnSetTensor4dDescriptor(
         output_descriptor,
-        CUDNN_TENSOR_NCHW,    // Format
-        CUDNN_DATA_DOUBLE,    // Data type
+        CUDNN_TENSOR_NCHW,
+        CUDNN_DATA_DOUBLE,
         1,                    // Batch size
         K,                    // Channels
         out_h,               // Height
         out_w                // Width
     ));
 
-    // Choose the best algorithm
-    cudnnConvolutionFwdAlgo_t algorithm;
-    CHECK_CUDNN(cudnnGetConvolutionForwardAlgorithm(
+    // Find the fastest convolution algorithm
+    const int requested_algo_count = 10;
+    int returned_algo_count;
+    cudnnConvolutionFwdAlgoPerf_t perf_results[requested_algo_count];
+    
+    CHECK_CUDNN(cudnnFindConvolutionForwardAlgorithm(
         cudnn,
         input_descriptor,
         filter_descriptor,
         convolution_descriptor,
         output_descriptor,
-        CUDNN_CONVOLUTION_FWD_PREFER_FASTEST,
-        0,  // No memory limit
-        &algorithm
+        requested_algo_count,
+        &returned_algo_count,
+        perf_results
     ));
+
+    // Select the fastest algorithm
+    cudnnConvolutionFwdAlgo_t algorithm = perf_results[0].algo;
 
     // Get workspace size and allocate
     size_t workspace_size;
@@ -193,6 +199,7 @@ int main() {
     float milliseconds = 0;
     CHECK_CUDA(cudaEventElapsedTime(&milliseconds, start, stop));
     printf("Kernel execution time: %f ms\n", milliseconds);
+    printf("Algorithm used: %d\n", algorithm);
 
     // Copy result back to host
     CHECK_CUDA(cudaMemcpy(h_O, d_O, K * H * W * sizeof(double), cudaMemcpyDeviceToHost));
