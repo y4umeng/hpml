@@ -11,7 +11,6 @@
 #define FW 3
 #define P 1
 
-// Initialize input tensor
 void initializeInput(double* I) {
     for (int c = 0; c < C; ++c) {
         for (int x = 0; x < H; ++x) {
@@ -22,7 +21,6 @@ void initializeInput(double* I) {
     }
 }
 
-// Initialize filter tensor
 void initializeFilter(double* F) {
     for (int k = 0; k < K; ++k) {
         for (int c = 0; c < C; ++c) {
@@ -48,7 +46,6 @@ int main() {
     initializeInput(I);
     initializeFilter(F);
 
-    // cuDNN handles and descriptors
     cudnnHandle_t cudnn;
     cudnnCreate(&cudnn);
 
@@ -61,54 +58,40 @@ int main() {
     cudnnCreateFilterDescriptor(&filterDesc);
     cudnnCreateConvolutionDescriptor(&convDesc);
 
-    // Set input tensor descriptor
     cudnnSetTensor4dDescriptor(inputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_DOUBLE, 1, C, H, W);
-
-    // Set filter descriptor
     cudnnSetFilter4dDescriptor(filterDesc, CUDNN_DATA_DOUBLE, CUDNN_TENSOR_NCHW, K, C, FH, FW);
-
-    // Set convolution descriptor
     cudnnSetConvolution2dDescriptor(convDesc, P, P, 1, 1, 1, 1, CUDNN_CROSS_CORRELATION, CUDNN_DATA_DOUBLE);
 
-    // Determine output dimensions
     int outN, outC, outH, outW;
     cudnnGetConvolution2dForwardOutputDim(convDesc, inputDesc, filterDesc, &outN, &outC, &outH, &outW);
-
-    // Set output tensor descriptor
     cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_DOUBLE, outN, outC, outH, outW);
 
-    // Find the best algorithm and get workspace size
-    cudnnConvolutionFwdAlgo_t algo;
-    cudnnGetConvolutionForwardAlgorithm(cudnn, inputDesc, filterDesc, convDesc, outputDesc, CUDNN_CONVOLUTION_FWD_PREFER_FASTEST, 0, &algo);
-
+    int requestedAlgoCount = 1;
+    cudnnConvolutionFwdAlgoPerf_t algoPerf;
+    cudnnFindConvolutionForwardAlgorithm(cudnn, inputDesc, filterDesc, convDesc, outputDesc, requestedAlgoCount, &requestedAlgoCount, &algoPerf);
+    
     size_t workspaceSize;
-    cudnnGetConvolutionForwardWorkspaceSize(cudnn, inputDesc, filterDesc, convDesc, outputDesc, algo, &workspaceSize);
+    cudnnGetConvolutionForwardWorkspaceSize(cudnn, inputDesc, filterDesc, convDesc, outputDesc, algoPerf.algo, &workspaceSize);
 
-    // Allocate workspace
     void* workspace;
     cudaMalloc(&workspace, workspaceSize);
 
-    // Set scaling parameters
     double alpha = 1.0, beta = 0.0;
 
-    // Run the convolution and measure execution time
     auto start = std::chrono::high_resolution_clock::now();
-    cudnnConvolutionForward(cudnn, &alpha, inputDesc, I, filterDesc, F, convDesc, algo, workspace, workspaceSize, &beta, outputDesc, O);
+    cudnnConvolutionForward(cudnn, &alpha, inputDesc, I, filterDesc, F, convDesc, algoPerf.algo, workspace, workspaceSize, &beta, outputDesc, O);
     cudaDeviceSynchronize();
     auto end = std::chrono::high_resolution_clock::now();
 
-    // Calculate checksum
     double checksum = 0.0;
     for (int i = 0; i < K * W * H; ++i) {
         checksum += O[i];
     }
     std::cout << "Checksum (sum of all elements in O): " << checksum << std::endl;
 
-    // Display execution time
     std::chrono::duration<double> elapsed = end - start;
     std::cout << "Kernel execution time: " << elapsed.count() << " seconds" << std::endl;
 
-    // Clean up
     cudaFree(I);
     cudaFree(F);
     cudaFree(O);
