@@ -53,7 +53,7 @@ def main():
     )
 
     # Model initialization
-    model = ResNet18(num_classes=10).to(device)
+    model = ResNet18().to(device)
 
     if args.distributed:
         model = nn.parallel.DistributedDataParallel(model, device_ids=args.gpu_ids)
