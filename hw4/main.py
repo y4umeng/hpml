@@ -5,8 +5,8 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
-from resnet import ResNet18  # Assuming ResNet18 is implemented in resnet.py
-from utils import calculate_accuracy  # Utility functions from utils.py
+from .resnet import ResNet18  # Assuming ResNet18 is implemented in resnet.py
+from .utils import calculate_accuracy  # Utility functions from utils.py
 
 
 def main():
