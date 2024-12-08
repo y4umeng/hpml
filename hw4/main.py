@@ -23,7 +23,6 @@ def main():
     parser.add_argument('--momentum', type=float, default=0.9, help='Momentum for SGD')
     parser.add_argument('--weight_decay', type=float, default=5e-4, help='Weight decay')
     parser.add_argument('--gpu_ids', nargs='+', type=int, default=[0], help='GPU IDs for training')
-    parser.add_argument('--distributed', action='store_true', help='Use DistributedDataParallel')
     args = parser.parse_args()
 
     # Prepare device
@@ -40,10 +39,6 @@ def main():
     train_dataset = datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
     train_sampler = None
 
-    if args.distributed:
-        torch.distributed.init_process_group(backend='nccl')
-        train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
-
     train_loader = DataLoader(
         train_dataset,
         batch_size=args.batch_size,
@@ -55,9 +50,7 @@ def main():
     # Model initialization
     model = ResNet18().to(device)
 
-    if args.distributed:
-        model = nn.parallel.DistributedDataParallel(model, device_ids=args.gpu_ids)
-    elif len(args.gpu_ids) > 1:
+    if len(args.gpu_ids) > 1:
         model = nn.DataParallel(model, device_ids=args.gpu_ids)
 
     # Optimizer and Loss
@@ -105,7 +98,7 @@ def train_one_epoch(model, dataloader, optimizer, criterion, device):
 
         # Simulate communication timing (if distributed or parallel)
         start_communication_time = time.time()
-        if isinstance(model, (nn.DataParallel, nn.parallel.DistributedDataParallel)):
+        if isinstance(model, nn.DataParallel):
             torch.cuda.synchronize()
         communication_time = time.time() - start_communication_time
         total_communication_time += communication_time
