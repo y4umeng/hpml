@@ -57,6 +57,8 @@ def main():
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
     criterion = nn.CrossEntropyLoss()
 
+    print(f"\nBatch Size: {args.batch_size}, Epochs: {args.epochs}, GPU IDs: {args.gpu_ids}")
+
     for epoch in range(args.epochs):
         if train_sampler:
             train_sampler.set_epoch(epoch)
