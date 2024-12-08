@@ -101,6 +101,7 @@ def train_one_epoch(model, dataloader, optimizer, criterion, device):
         # Simulate communication timing (if distributed or parallel)
         start_communication_time = time.time()
         if isinstance(model, nn.DataParallel):
+            print("Synchronizing")
             torch.cuda.synchronize()
         communication_time = time.time() - start_communication_time
         total_communication_time += communication_time
