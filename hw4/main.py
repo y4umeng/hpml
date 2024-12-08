@@ -65,7 +65,7 @@ def main():
 
         total_time, compute_time, communication_time, train_loss, train_acc = train_one_epoch(model, train_loader, optimizer, criterion, device)
 
-        print(f"Epoch {epoch + 1}/{args.epochs}: Loss={train_loss:.4f}, Accuracy={train_acc:.2f}%, Total Time={total_time:.2f}s, Compute Time={compute_time:.2f}s, Communication Time={communication_time:.2f}s")
+        print(f"Epoch {epoch + 1}/{args.epochs}: Loss={train_loss:.4f}, Accuracy={train_acc:.2f}%, Total Time={total_time:.6f}s, Compute Time={compute_time:.6f}s, Communication Time={communication_time:.6f}s")
 
 
 def train_one_epoch(model, dataloader, optimizer, criterion, device):
